@@ -1,6 +1,7 @@
 %option noyywrap
 
 %{
+#include "novalangp2.tab.h"
 #include <iostream>
 #include <string>
 using namespace std;
@@ -11,9 +12,9 @@ int line_no = 1;
 
 
 identifier      \$[A-Za-z][A-Za-z0-9.@]*
-integer         [1-9][0-9](-[0-9]+)
+integer         [1-9][0-9]*(-[0-9]+)*
 float_val       [0-9]+_[0-9]+\.[0-9]+
-string_val      \"[A-Za-z0-9_,.!?@#%&()\[\]\-/\\]\"
+string_val      \"[A-Za-z0-9_,.!?@#%&*()\[\]\-/\\]*\"
 single_comment  \/\/@.*
 multi_comment   \/@([^@]|\n|@[^\/])*@\/
 new_line        \n
@@ -25,8 +26,8 @@ data_type       (numberX|realNum|alphaWord|tinyChar|flagLogic|constantX|arrayBox
 
 add_op          _\+\+\+
 sub_op          ---\_
-mul_op          _\\\*
-div_op          \/\/\/
+mul_op          _\*\*\*
+div_op          _\/\/\/_
 
 assign_op       ==
 not_equal_op    \!\=\=
@@ -35,7 +36,7 @@ greater_op      >>
 
 
 end_line        ;;;
-separator       ::: 
+separator       _:::_ 
 block_start     _<<<
 block_end       >>>_
 
@@ -130,13 +131,15 @@ block_end       >>>_
 
 %%
 
-int main() {
-    yylex();
+int main()
+{
+    printf("\n--- NovaLang Lexer Started ---\n");
 
-    cout << "\n----------------------------------------\n";
-    cout << "Total Tokens: " << token_count << endl;
-    cout << "Total Lines : " << line_no << endl;
-    cout << "----------------------------------------\n";
+    yylex();   // run lexical analysis
 
-     return 0;
+    printf("\n✔ Lexical Analysis Completed Successfully\n");
+
+    return 0;
 }
+
+

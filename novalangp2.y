@@ -1,22 +1,19 @@
 %{
-#include <stdio.h>
-#include <stdlib.h>
+#include <iostream>
 
-int yylex();
+using namespace std;
+
 void yyerror(const char *s);
+int yylex();
 %}
 
-/* ---------- Tokens ---------- */
 
+%token NUMBER IDENTIFIER LITERAL
 %token CHECK OTHERWISE REPEATWHILE SHOWOUT
-%token NUMBER
-%token IDENTIFIER
-%token INT_LITERAL FLOAT_LITERAL STRING_LITERAL
-
-%token BLOCK_START BLOCK_END
-%token END_LINE
+%token BLOCK_START BLOCK_END TERMINATOR
 %token ADD_OP EQ_OP
-%token LPAREN RPAREN
+
+%start Program
 
 %%
 
@@ -26,74 +23,59 @@ Program
 
 Block
     : BLOCK_START StmtList BLOCK_END
+    | error BLOCK_END
+      { yyerror("Missing BLOCK_START or incorrect block"); yyerrok; }
     ;
 
 StmtList
     : Stmt StmtList
-    | /* empty */
+    | 
     ;
 
 Stmt
-    : Decl
-    | Assign
+    : Assign
     | CondMatched
     | Loop
     | Output
-    ;
-
-Decl
-    : NUMBER IDENTIFIER END_LINE
+    | error TERMINATOR
+      { yyerror("Invalid statement"); yyerrok; }
     ;
 
 Assign
-    : IDENTIFIER ADD_OP Expr END_LINE
+    : IDENTIFIER ADD_OP TERMINATOR
+      { cout << "Increment statement detected.\n"; }
     ;
 
 CondMatched
-    : CHECK LPAREN Expr RPAREN Block OTHERWISE Block
+    : CHECK '(' IDENTIFIER EQ_OP IDENTIFIER ')' Block OTHERWISE Block
+      { cout << "IF-ELSE statement detected.\n"; }
+    | error ')' Block OTHERWISE Block
+      { yyerror("Invalid IF-ELSE statement"); yyerrok; }
     ;
 
 Loop
-    : REPEATWHILE LPAREN Expr RPAREN Block
+    : REPEATWHILE '(' IDENTIFIER EQ_OP IDENTIFIER ')' Block
+      { cout << "RepeatWhile loop detected.\n"; }
+    | error ')' Block
+      { yyerror("Invalid RepeatWhile loop"); yyerrok; }
     ;
 
 Output
-    : SHOWOUT LPAREN Literal RPAREN END_LINE
-    ;
-
-Expr
-    : SimpleExpr
-    ;
-
-SimpleExpr
-    : IDENTIFIER
-    | Literal
-    | IDENTIFIER EQ_OP IDENTIFIER
-    ;
-
-Literal
-    : INT_LITERAL
-    | FLOAT_LITERAL
-    | STRING_LITERAL
+    : SHOWOUT '(' LITERAL ')' TERMINATOR
+      { cout << "Output statement detected.\n"; }
+    | error ')' TERMINATOR
+      { yyerror("Invalid output statement"); yyerrok; }
     ;
 
 %%
 
-void yyerror(const char *s)
-{
-    printf("\n❌ Syntax Error: Invalid NovaLang Code!\n");
+void yyerror(const char *s) {
+    cerr << "Syntax Error: " << s << endl;
 }
 
-int main()
-{
-    printf("\n--- NovaLang Parser Started ---\n");
-
-    if (yyparse() == 0)
-        printf("✔ Parsing Successful — No Syntax Errors\n");
-    else
-        printf("❌ Parsing Failed\n");
-
+int main() {
+    cout << "NovaLang Parser Started..." << endl;
+    yyparse();
+    cout << "Parsing Finished." << endl;
     return 0;
-
 }
-
